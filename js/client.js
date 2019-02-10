@@ -1,12 +1,9 @@
 var net = require("net");
-// var ipRaymond = "192.168.200.177";
-const hostname = "localhost";
-const port = "8080";
-const client = new net.Socket();
-client.connect(port, hostname, function() {
+var ipRaymond = "192.168.200.177";
+var client = new net.Socket();
+client.connect(8181, "127.0.0.1", function() {
   console.log("Connected");
-
-  //client.write(strLong);
+  client.write("Hello, server! Love, Client.");
   process.stdin.pipe(client);
 });
 
