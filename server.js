@@ -14,31 +14,49 @@ const port = "8080";
 const server = net.createServer(socket => {
   console.log("client connected.");
   socket.on("data", data => {
-    console.log("data here.");
-
-    // console.log(data);
-    // socket.write(data);
     let parsedData = data.toString();
-    parsedData = parsedData.split("\n");
+    let arrParsedData = parsedData.split("\n");
+    console.log(arrParsedData);
+    const arrRequestLine = arrParsedData[0].split(" ");
+    const method = arrRequestLine[0];
+    const requestUri = arrRequestLine[1];
 
-    // console.log(parsedData);
+    let strModifiedSince = arrParsedData
+      .filter(x => x.indexOf("If-Modified-Since:") > -1)
+      .toString();
+    // console.log("typeof", typeof strModifiedSince);
+    if (strModifiedSince) {
+      strModifiedSince = strModifiedSince
+        .replace("If-Modified-Since:", "")
+        .trim();
+    }
 
-    const requestLine = parsedData[0].split(" ");
-    const method = requestLine[0];
-    const requestUri = requestLine[1];
-    console.log("method", method);
+    // console.log("method", method);
     // console.log("requestUri", requestUri);
     // console.log(Date() + ` ${method} ` + ` ${requestUri} `);
     // socket.end();
 
     const callRoute = (socket, htmlDoc, bCss) => {
-      // const serverResponse = `${headData.head}\n\n${htmlDoc}`;
-      let serverResponse = headData.head + "\n\n" + htmlDoc;
+      let strLastModified = headData.status200
+        .split("\n")
+        .filter(x => x.indexOf("Last-Modified:") > -1)
+        .toString();
+      if (strLastModified) {
+        strLastModified = strLastModified.replace("Last-Modified:", "").trim();
+      }
+      let serverResponse = "";
+      if (strLastModified <= strModifiedSince) {
+        serverResponse = `${headData.status304}\n\n`;
+        // file date hasn't changed, throw error
+      } else {
+        serverResponse = `${headData.status200}\n\n${htmlDoc}`;
+      }
+      // serverResponse = `${headData.status200}\n\n${htmlDoc}`;
+
       if (bCss) {
         serverResponse = serverResponse.replace("text/html", "text/css");
         console.log("css applied");
       }
-      // console.log(htmlDoc);
       socket.write(serverResponse);
       socket.end();
     };
@@ -61,7 +79,6 @@ const server = net.createServer(socket => {
           break;
         default:
           callRoute(socket, errorDoc);
-          // callRoute(socket, indexDoc);
           break;
       }
       socket.end();
@@ -71,15 +88,8 @@ const server = net.createServer(socket => {
   socket.on("end", () => {
     console.log("client disconnected");
   });
-
-  // const body =
-  //   "<body><h1>Testing Server Response</h1>The rain in Spain falls mainly on the plain.<br></body>";
-  // const serverResponse = `${headData.head}\n\n${body}`;
-
-  // socket.write(serverResponse);
-  // socket.pipe(socket);
-  // socket.end("\n\nconnection ended.\n");
 });
+
 server.on("error", err => {
   // handle errors
   throw err;
