@@ -15,8 +15,9 @@ const server = net.createServer(socket => {
   console.log("client connected.");
   socket.on("data", data => {
     let parsedData = data.toString();
+    console.log("parsedData: ", parsedData);
     let arrParsedData = parsedData.split("\n");
-    console.log(arrParsedData);
+    // console.log("arrParsedData: ", arrParsedData);
     const arrRequestLine = arrParsedData[0].split(" ");
     const method = arrRequestLine[0];
     const requestUri = arrRequestLine[1];
@@ -29,6 +30,7 @@ const server = net.createServer(socket => {
       strModifiedSince = strModifiedSince
         .replace("If-Modified-Since:", "")
         .trim();
+      console.log("Modified-since: ", strModifiedSince);
     }
 
     // console.log("method", method);
@@ -36,7 +38,11 @@ const server = net.createServer(socket => {
     // console.log(Date() + ` ${method} ` + ` ${requestUri} `);
     // socket.end();
 
+    /******************************
+     * CALLROUTE *
+     ******************************/
     const callRoute = (socket, htmlDoc, bCss) => {
+      console.log("callRoute");
       let strLastModified = headData.status200
         .split("\n")
         .filter(x => x.indexOf("Last-Modified:") > -1)
@@ -45,22 +51,32 @@ const server = net.createServer(socket => {
         strLastModified = strLastModified.replace("Last-Modified:", "").trim();
       }
       let serverResponse = "";
-      if (strLastModified <= strModifiedSince) {
+      const dteLastModified = Date.parse(strLastModified);
+      const dteModifiedSince = Date.parse(strModifiedSince);
+      if (dteLastModified <= dteModifiedSince) {
         serverResponse = `${headData.status304}\n\n`;
         // file date hasn't changed, throw error
+        console.log("no updates.");
       } else {
+        console.log("refreshing....");
         serverResponse = `${headData.status200}\n\n${htmlDoc}`;
+        console.log("serverResponse made.");
       }
       // serverResponse = `${headData.status200}\n\n${htmlDoc}`;
 
       if (bCss) {
+        // adjust for css file
         serverResponse = serverResponse.replace("text/html", "text/css");
         console.log("css applied");
       }
+      // console.log("serverResponse: ", serverResponse);
+      console.log("about to write serverResponse");
       socket.write(serverResponse);
+      console.log("after serverResponse");
       socket.end();
+      console.log("after socket end");
     };
-
+    // console.log();
     if (method === "GET") {
       console.log("requestUri: ", requestUri);
 
@@ -89,11 +105,13 @@ const server = net.createServer(socket => {
     console.log("client disconnected");
   });
 });
-
+/*
 server.on("error", err => {
   // handle errors
+  console.log("err: ", err.message);
   throw err;
 });
+*/
 
 // grab a the port
 server.listen(port, () => {
