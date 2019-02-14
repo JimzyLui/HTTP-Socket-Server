@@ -109,14 +109,14 @@ The main client file is `client.js`.
 The client will run once, then exit.
 
 1. Create a client to establish TCP socket connections to HTTP servers
-1. The node command requires a single argument, the host and uri to request a resource from
+2. The node command requires a single argument, the host and uri to request a resource from
 
 - example: `www.devleague.com/apply`
 
-1. Transmit 'standard' HTTP Headers to the server
-1. Wait for a response from the server
-1. When the server responds, display the response message body to the terminal
-1. If the node client is run with no arguments, display a "help/usage" message that explains how to use your client, including all available options
+3. Transmit 'standard' HTTP Headers to the server
+4. Wait for a response from the server
+5. When the server responds, display the response message body to the terminal
+6. If the node client is run with no arguments, display a "help/usage" message that explains how to use your client, including all available options
 
 example usage:
 
